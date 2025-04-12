@@ -1,7 +1,6 @@
-package com.nexusdev.laligadls
+package com.nexusdev.laligadls.view
 
 import android.annotation.SuppressLint
-import android.content.Intent
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
@@ -13,42 +12,46 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.recyclerview.widget.GridLayoutManager
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
+import com.nexusdev.laligadls.MainActivity
+import com.nexusdev.laligadls.R
+import com.nexusdev.laligadls.adapter.AdapterPartidos
 import com.nexusdev.laligadls.adapter.AdapterTabla
 import com.nexusdev.laligadls.data.Equipos
-import com.nexusdev.laligadls.databinding.ActivityMainBinding
-import com.nexusdev.laligadls.view.PartidosActivity
+import com.nexusdev.laligadls.data.Partidos
+import com.nexusdev.laligadls.databinding.ActivityPartidosBinding
 
 @Suppress("DEPRECATION")
-class MainActivity : AppCompatActivity() {
+class PartidosActivity : AppCompatActivity() {
 
-    private lateinit var binding: ActivityMainBinding
+    private lateinit var binding: ActivityPartidosBinding
 
-    private var adapter: AdapterTabla? = null
+    private var adapter: AdapterPartidos? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        binding = ActivityMainBinding.inflate(layoutInflater)
+        binding = ActivityPartidosBinding.inflate(layoutInflater)
         setContentView(binding.root)
         supportActionBar?.hide()
         AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
         window.statusBarColor = ContextCompat.getColor(this, R.color.black)
 
-        getAllRealtime()
         click()
+        getAllRealtime()
     }
 
     private fun click() {
-        binding.btnPartidos.setOnClickListener {
-            startActivity(Intent(this, PartidosActivity::class.java))
+        binding.btnAtras.setOnClickListener {
+            onBackPressed()
+            finish()
         }
     }
 
     @SuppressLint("SetTextI18n")
     private fun getAllRealtime() {
         val db = FirebaseFirestore.getInstance()
-        val dataRef = db.collection("equipos")
+        val dataRef = db.collection("partidos")
 
-        dataRef.orderBy("puntos", Query.Direction.DESCENDING)
+        dataRef.orderBy("fecha", Query.Direction.DESCENDING)
             .addSnapshotListener { snapshots, error ->
                 if (error != null) {
                     Toast.makeText(
@@ -60,23 +63,23 @@ class MainActivity : AppCompatActivity() {
                 }
 
                 if (snapshots != null) {
-                    val listaEquipos = mutableListOf<Equipos>()
+                    val listaEquipos = mutableListOf<Partidos>()
                     for (document in snapshots) {
-                        val reparacion = document.toObject(Equipos::class.java)
-                        reparacion.id = document.id
-                        listaEquipos.add(reparacion)
+                        val partido = document.toObject(Partidos::class.java)
+                        partido.id = document.id
+                        listaEquipos.add(partido)
                     }
                     configRecyclerView(listaEquipos)
                 }
             }
     }
 
-    private fun configRecyclerView(listaReparaciones: List<Equipos>) {
-        adapter = AdapterTabla(listaReparaciones)
+    private fun configRecyclerView(listaPartidos: List<Partidos>) {
+        adapter = AdapterPartidos(listaPartidos)
         binding.recyclerView.apply {
             layoutManager =
-                GridLayoutManager(this@MainActivity, 1, GridLayoutManager.VERTICAL, false)
-            adapter = this@MainActivity.adapter
+                GridLayoutManager(this@PartidosActivity, 1, GridLayoutManager.VERTICAL, false)
+            adapter = this@PartidosActivity.adapter
         }
         adapter?.onItemClick = {
 //            val i = Intent(this@MainActivity, DetalleReparacionActivity::class.java)
